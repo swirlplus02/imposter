@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3b4cca">
+<title>Imposter</title>
+<style>
+:root{--bg:#eef0f7;--card:#fff;--text:#1b1f3b;--muted:#646a8f;--accent:#3b4cca;--on:#fff;--bad:#d7263d;--line:#d5d9ec;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12142a;--card:#1d2045;--text:#eceefc;--muted:#9aa0cc;--accent:#8f9bff;--on:#12142a;--bad:#ff6b7f;--line:#323766;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12142a;--card:#1d2045;--text:#eceefc;--muted:#9aa0cc;--accent:#8f9bff;--on:#12142a;--bad:#ff6b7f;--line:#323766;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+#app{max-width:480px;margin:0 auto;padding:20px 16px 32px}
+h1{font-size:2rem;margin:0 0 16px;letter-spacing:-.02em}
+h2{font-size:1rem;margin:0 0 8px;color:var(--muted);font-weight:600}
+section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+input[type=text]{width:100%;font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-top:8px}
+button{font:inherit;color:inherit;cursor:pointer}
+.step{display:flex;align-items:center;justify-content:space-between}
+.step b{font-size:1.5rem}
+.step button{width:48px;height:48px;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-size:1.5rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:20px;padding:9px 14px}
+.chip.on{background:var(--accent);color:var(--on);border-color:var(--accent);font-weight:600}
+.row{display:flex;align-items:center;gap:10px;margin:14px 2px}
+.row input{width:22px;height:22px;accent-color:var(--accent)}
+.go{width:100%;border:0;border-radius:14px;padding:16px;background:var(--accent);color:var(--on);font-weight:700;font-size:1.1rem;margin-top:8px}
+.go:disabled{opacity:.35}
+.alt{width:100%;border:1px solid var(--line);border-radius:14px;padding:14px;background:transparent;margin-top:10px}
+.muted{color:var(--muted);margin:0}
+#card{margin:20px 0;min-height:300px;border-radius:20px;background:var(--card);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#card.show{border-color:var(--accent)}
+#card.show.bad{border-color:var(--bad)}
+.big{font-size:2.2rem;font-weight:800;line-height:1.15;overflow-wrap:anywhere}
+.big.bad{color:var(--bad)}
+.cover small{display:block;color:var(--muted);margin-top:8px}
+.cover span{font-size:1.4rem;font-weight:700}
+.starter{font-size:2.4rem;font-weight:800;color:var(--accent);margin:8px 0 24px;overflow-wrap:anywhere}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const T={
+"Everyday objects":["Toothbrush","Umbrella","Scissors","Keys","Mirror","Backpack","Lamp","Kettle","Pillow","Wallet","Clock","Headphones","Candle","Broom","Remote control","Sunglasses","Stapler","Towel","Ladder","Battery"],
+"Famous people":["Albert Einstein","Beyoncé","Michael Jackson","Cristiano Ronaldo","Taylor Swift","Elon Musk","Leonardo DiCaprio","Barack Obama","Oprah Winfrey","Lionel Messi","Queen Elizabeth II","Will Smith","Rihanna","Gordon Ramsay","Keanu Reeves","Muhammad Ali","Shakespeare","Napoleon","Mr Bean","David Beckham"],
+"Animals":["Elephant","Penguin","Giraffe","Dolphin","Kangaroo","Octopus","Owl","Crocodile","Hedgehog","Flamingo","Panda","Squirrel","Shark","Camel","Bat","Tortoise","Wolf","Peacock","Lobster","Seal"],
+"Food":["Pizza","Sushi","Burger","Pasta","Curry","Pancakes","Tacos","Fish and chips","Sandwich","Omelette","Lasagne","Popcorn","Noodles","Cheesecake","Falafel","Dumplings","Roast dinner","Chocolate","Ice cream","Samosa"],
+"Drinks":["Coffee","Tea","Orange juice","Cola","Milkshake","Lemonade","Hot chocolate","Beer","Wine","Smoothie","Water","Cocktail","Champagne","Iced tea","Energy drink","Bubble tea","Milk","Whisky","Mojito","Cider"],
+"Places":["Beach","Airport","Library","Hospital","Supermarket","Cinema","Zoo","Gym","Museum","Casino","Castle","Prison","School","Farm","Eiffel Tower","Desert","Train station","Swimming pool","Campsite","Theme park"],
+"Jobs and professions":["Doctor","Teacher","Pilot","Chef","Firefighter","Plumber","Lawyer","Dentist","Farmer","Police officer","Electrician","Journalist","Architect","Photographer","Barber","Astronaut","Vet","Bus driver","Magician","Lifeguard"],
+"Sports and activities":["Football","Tennis","Swimming","Boxing","Golf","Yoga","Cycling","Basketball","Skiing","Surfing","Cricket","Bowling","Climbing","Karaoke","Chess","Fishing","Archery","Darts","Skateboarding","Gardening"]
+};
+const app=document.getElementById("app");
+const S={n:4,names:[],imp:1,topic:"Animals",hint:true};
+const maxImp=()=>Math.max(1,Math.floor((S.n-1)/2));
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const stepper=(k,v)=>`<div class="step"><button data-s="${k}" data-d="-1" aria-label="Fewer">−</button><b>${v}</b><button data-s="${k}" data-d="1" aria-label="More">+</button></div>`;
+
+function setup(){
+  const chips=Object.keys(T).map(t=>`<button class="chip${t===S.topic?" on":""}" data-t="${t}">${t}</button>`).join("");
+  const inputs=Array.from({length:S.n},(_,i)=>`<input type="text" data-i="${i}" placeholder="Player ${i+1}" value="${esc(S.names[i]||"")}" maxlength="16">`).join("");
+  app.innerHTML=`<h1>Imposter</h1>
+  <section><h2>Players</h2>${stepper("n",S.n)}${inputs}</section>
+  <section><h2>Imposters</h2>${stepper("imp",S.imp)}</section>
+  <section><h2>Topic</h2><div class="chips">${chips}</div></section>
+  <label class="row"><input type="checkbox" id="hint"${S.hint?" checked":""}> Give imposters a hint</label>
+  <button class="go" data-a="start">Start game</button>`;
+}
+
+function start(){
+  S.players=Array.from({length:S.n},(_,i)=>(S.names[i]||"").trim()||`Player ${i+1}`);
+  S.word=rnd(T[S.topic]);
+  S.imps=new Set();
+  while(S.imps.size<S.imp)S.imps.add(Math.floor(Math.random()*S.n));
+  S.starter=rnd(S.players);
+  S.i=0;
+  card();
+}
+
+function card(){
+  const bad=S.imps.has(S.i);
+  const face=bad
+    ?`<div><div class="big bad">You are the imposter</div>${S.hint?`<p class="muted">Hint: the topic is ${esc(S.topic.toLowerCase())}</p>`:""}</div>`
+    :`<div class="big">${esc(S.word)}</div>`;
+  app.innerHTML=`<p class="muted">Player ${S.i+1} of ${S.n}</p><h1>${esc(S.players[S.i])}</h1>
+  <div id="card"><div class="cover"><span>Hold to reveal</span><small>Make sure only you can see the screen</small></div><div class="face" hidden>${face}</div></div>
+  <button class="go" data-a="next" disabled>${S.i<S.n-1?"Next player":"Done"}</button>`;
+  const c=document.getElementById("card"),cover=c.querySelector(".cover"),f=c.querySelector(".face"),next=app.querySelector("[data-a=next]");
+  const show=()=>{cover.hidden=true;f.hidden=false;c.classList.add("show");c.classList.toggle("bad",bad);next.disabled=false};
+  const hide=()=>{cover.hidden=false;f.hidden=true;c.classList.remove("show","bad")};
+  c.addEventListener("pointerdown",show);
+  ["pointerup","pointercancel","pointerleave"].forEach(ev=>c.addEventListener(ev,hide));
+  c.addEventListener("contextmenu",e=>e.preventDefault());
+}
+
+function done(){
+  app.innerHTML=`<h1>Ready</h1><p class="muted">Everyone has seen their card. Starting the conversation:</p>
+  <div class="starter">${esc(S.starter)}</div>
+  <button class="go" data-a="again">New round</button>
+  <button class="alt" data-a="setup">Change settings</button>`;
+}
+
+app.addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  const d=b.dataset;
+  if(d.s){
+    if(d.s==="n")S.n=Math.min(12,Math.max(3,S.n+ +d.d));
+    else S.imp=Math.max(1,S.imp+ +d.d);
+    S.imp=Math.min(S.imp,maxImp());
+    setup();
+  }else if(d.t){S.topic=d.t;setup();}
+  else if(d.a==="start"||d.a==="again")start();
+  else if(d.a==="next"){S.i++;S.i<S.n?card():done();}
+  else if(d.a==="setup")setup();
+});
+app.addEventListener("input",e=>{
+  const t=e.target;
+  if(t.dataset.i!==undefined)S.names[+t.dataset.i]=t.value;
+  else if(t.id==="hint")S.hint=t.checked;
+});
+setup();
+</script>
+</body>
+</html>
